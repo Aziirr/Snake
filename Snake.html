@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Snake</title>
+    <style>
+        #main {
+            position: relative;
+            width: 231px;
+            height: 231px;
+            padding: 0;
+            margin: 0 auto;
+        }
+
+        .tablediv {
+            position: absolute;
+            background-image: url("img/tile.png");
+            width: 20px;
+            height: 20px;
+            padding: 0;
+            margin: 0;
+            background-size: cover;
+        }
+
+        .border {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            padding: 0;
+            margin: 0;
+            background-size: cover;
+        }
+
+        .snake {
+            background-size: cover;
+        }
+
+        .fruit {
+            background-size: cover;
+        }
+
+        body {
+            background-color: black;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        function generate() {
+            const maindiv = document.createElement("div")
+            maindiv.id = "main"
+            document.body.appendChild(maindiv)
+            width = 22
+            height = 22
+            let top = 0
+            let left = 0
+            for (let i = 1; i <= height; i++) {
+                for (let j = 1; j <= width; j++) {
+                    let subdiv = document.createElement("div")
+                    if (i == 1 || i == height || j == 1 || j == width) {
+                        subdiv.classList.add("border")
+                        subdiv.style.backgroundColor = ""
+                    } else {
+                        subdiv.classList.add("tablediv")
+                    }
+                    if (i == parseInt(height / 2) && j == parseInt(width / 2)) {
+                        subdiv.classList.add("snake")
+                        subdiv.style.backgroundImage = "url(img/head-up.png)"
+                    }
+                    subdiv.style.top = top + "px"
+                    subdiv.style.left = left + "px"
+                    subdiv.id = i + "_" + j
+                    maindiv.appendChild(subdiv)
+                    left += 20
+                }
+                left = 0
+                top += 20
+            }
+        }
+
+        generate()
+
+        let snakepositions = [
+            [parseInt(width / 2), parseInt(height / 2)]
+        ]
+        let gameover = false
+        let fruitexists = false
+        let fruitdiviscorrect = false
+        let gamestarted = false
+        let direction
+        let addsnakelenght = false
+        let lastdivId
+        let currentdirection
+
+        function firstmove(event) {
+            if (!gamestarted) {
+                if (event.key == "w" || event.key == "ArrowUp") {
+                    direction = "up"
+                } else if (event.key == "s" || event.key == "ArrowDown") {
+                    direction = "down"
+                } else if (event.key == "a" || event.key == "ArrowLeft") {
+                    direction = "left"
+                } else if (event.key == "d" || event.key == "ArrowRight") {
+                    direction = "right"
+                }
+                currentdirection = direction
+                snakepositions[0].push(currentdirection)
+                gamestarted = true
+            }
+        }
+
+        function movedirection(event) {
+            if (!gameover && gamestarted) {
+                const width = 11
+                const height = 11
+                if (event.key == "w" || event.key == "ArrowUp") {
+                    if (currentdirection != "down") {
+                        direction = "up"
+                    }
+                } else if (event.key == "s" || event.key == "ArrowDown") {
+                    if (currentdirection != "up") {
+                        direction = "down"
+                    }
+                } else if (event.key == "a" || event.key == "ArrowLeft") {
+                    if (currentdirection != "right") {
+                        direction = "left"
+                    }
+                } else if (event.key == "d" || event.key == "ArrowRight") {
+                    if (currentdirection != "left") {
+                        direction = "right"
+                    }
+
+                }
+            }
+        }
+
+        function move() {
+            if (!gameover && gamestarted) {
+                let lastdivId = snakepositions[snakepositions.length - 1][0] + "_" + snakepositions[snakepositions
+                    .length - 1][1]
+                currentdirection = direction
+                snakepositions[0][2] = currentdirection
+                if (currentdirection == "up") {
+                    if (document.getElementById(snakepositions[0][0] - 1 + "_" + snakepositions[0][1]).classList
+                        .contains("border"))
+                        gameover = true
+                } else if (currentdirection == "down") {
+                    if (document.getElementById(snakepositions[0][0] + 1 + "_" + snakepositions[0][1]).classList
+                        .contains("border"))
+                        gameover = true
+                } else if (currentdirection == "left") {
+                    if (document.getElementById(snakepositions[0][0] + "_" + (snakepositions[0][1] - 1)).classList
+                        .contains("border"))
+                        gameover = true
+                } else if (currentdirection == "right") {
+                    if (document.getElementById(snakepositions[0][0] + "_" + (snakepositions[0][1] + 1)).classList
+                        .contains("border"))
+                        gameover = true
+                }
+                if (!gameover) {
+                    if (!addsnakelenght) {
+                        let lastdiv = document.getElementById(lastdivId)
+                        lastdiv.classList.remove("snake")
+                        lastdiv.style.backgroundImage = "url(img/tile.png)"
+                    } else {
+                        snakepositions.push(lastdivId.split("_").map(Number))
+                        addsnakelenght = false
+                    }
+                    for (let i = snakepositions.length - 1; i > 0; i--) {
+                        let previoussnakeposition = snakepositions[i - 1].slice(0)
+                        snakepositions[i] = previoussnakeposition
+                    }
+
+                    if (direction == "up") {
+                        snakepositions[0][0]--
+                    } else if (direction == "down") {
+                        snakepositions[0][0]++
+                    } else if (direction == "left") {
+                        snakepositions[0][1]--
+                    } else if (direction == "right") {
+                        snakepositions[0][1]++
+                    }
+
+                    if (!fruitexists) {
+                        while (!fruitdiviscorrect) {
+                            let fruitindexx = Math.floor(Math.random() * (10 - 1 + 1)) + 1
+                            let fruitindexy = Math.floor(Math.random() * (10 - 1 + 1)) + 1
+                            let fruitdivId = fruitindexx + "_" + fruitindexy
+                            fruitdiv = document.getElementById(fruitdivId)
+                            if (!(fruitdiv.classList.contains("snake")) && !(fruitdiv.classList.contains(
+                                    "border"))) {
+                                fruitdiviscorrect = true
+                            }
+
+                        }
+                        fruitdiv.classList.add("fruit")
+                        fruitdiv.style.backgroundImage = "url(img/fruit.png)"
+                        fruitexists = true
+                        fruitdiviscorrect = false
+                    }
+                    let firstdiv = document.getElementById(snakepositions[0][0] + "_" + snakepositions[0][1])
+                    if (firstdiv.classList.contains("fruit")) {
+                        fruitdiv.classList.remove("fruit")
+                        fruitdiv.style.backgroundImage = "url(img/tile.png)"
+                        addsnakelenght = true
+                        fruitexists = false
+                    }
+
+
+                    for (let i = 0; i < snakepositions.length; i++) {
+                        let divId = snakepositions[i][0] + "_" + snakepositions[i][1]
+                        let div = document.getElementById(divId)
+                        if (i == 0) {
+                            if (snakepositions[i][2] == "left")
+                                div.style.backgroundImage = "url(img/head-left.png)"
+                            else if (snakepositions[i][2] == "right")
+                                div.style.backgroundImage = "url(img/head-right.png)"
+                            else if (snakepositions[i][2] == "up")
+                                div.style.backgroundImage = "url(img/head-up.png)"
+                            else if (snakepositions[i][2] == "down")
+                                div.style.backgroundImage = "url(img/head-down.png)"
+                        } else if (i == snakepositions.length - 1) {
+                            if (snakepositions[i][2] == "left")
+                                div.style.backgroundImage = "url(img/snake-tail-left.png)"
+                            else if (snakepositions[i][2] == "right")
+                                div.style.backgroundImage = "url(img/snake-tail-right.png)"
+                            else if (snakepositions[i][2] == "up")
+                                div.style.backgroundImage = "url(img/snake-tail-up.png)"
+                            else if (snakepositions[i][2] == "down")
+                                div.style.backgroundImage = "url(img/snake-tail-down.png)"
+
+                        } else {
+                            if ((snakepositions[i][2] == "up" || snakepositions[i][2] == "down") && (snakepositions[i +
+                                    1][
+                                    2
+                                ] == "up" || snakepositions[i + 1][2] == "down"))
+                                div.style.backgroundImage = "url(img/snake-body-vert.png)"
+                            else if ((snakepositions[i][2] == "left" || snakepositions[i][2] == "right") && (
+                                    snakepositions[
+                                        i + 1][2] == "left" || snakepositions[i + 1][2] == "right"))
+                                div.style.backgroundImage = "url(img/snake-body-horz.png)"
+                            else if (snakepositions[i][2] == "right" && snakepositions[i + 1][2] == "down")
+                                div.style.backgroundImage = "url(img/snake-corner-down-right.png)"
+                            else if (snakepositions[i][2] == "left" && snakepositions[i + 1][2] == "down")
+                                div.style.backgroundImage = "url(img/snake-corner-down-left.png)"
+                            else if (snakepositions[i][2] == "right" && snakepositions[i + 1][2] == "up")
+                                div.style.backgroundImage = "url(img/snake-corner-up-right.png)"
+                            else if (snakepositions[i][2] == "left" && snakepositions[i + 1][2] == "up")
+                                div.style.backgroundImage = "url(img/snake-corner-up-left.png)"
+                            else if (snakepositions[i][2] == "down" && snakepositions[i + 1][2] == "right")
+                                div.style.backgroundImage = "url(img/snake-corner-right-down.png)"
+                            else if (snakepositions[i][2] == "down" && snakepositions[i + 1][2] == "left")
+                                div.style.backgroundImage = "url(img/snake-corner-left-down.png)"
+                            else if (snakepositions[i][2] == "up" && snakepositions[i + 1][2] == "right")
+                                div.style.backgroundImage = "url(img/snake-corner-right-up.png)"
+                            else if (snakepositions[i][2] == "up" && snakepositions[i + 1][2] == "left")
+                                div.style.backgroundImage = "url(img/snake-corner-left-up.png)"
+                        }
+                        if (i == 0 && div.classList.contains("snake")) {
+                            gameover = true
+                        }
+                        div.classList.add("snake")
+                    }
+                }
+                if (gameover) {
+                    setTimeout(() => {
+                        alert("Game Over")
+                        location.reload()
+                    }, 100)
+                }
+            }
+        }
+
+        let snakeid = setInterval(() => {
+            move()
+        }, 150)
+
+        document.body.addEventListener("keydown", firstmove)
+        document.body.addEventListener("keydown", movedirection)
+    </script>
+</body>
+
+</html>
